@@ -1,0 +1,52 @@
+pipeline {
+    agent any
+    //     parameters {
+    //     choice(choices:['plan','apply', 'destroy'], description: 'Terraform Choice operation', name: 'CHOICE')
+    // }
+    stages {
+        stage('Cloning SCM') {
+            steps {
+                git branch: 'main', url: 'https://github.com/elohank/Terraform-installation-consul.git'
+            }
+        }
+        stage('Terraform initialising code') {
+            steps {
+                sh 'cd consul && terraform init'
+            }
+        }
+        stage('Terraform formating code') {
+            steps {
+                sh 'terraform fmt'
+            }
+        }
+        stage('Terraform Validating the code') {
+            steps {
+                sh 'terraform validate'
+            }
+        }
+        stage('Terraform Plan') {
+            when { 
+                expression { env.CHOICE == 'plan' }
+            }
+            steps {
+                sh 'cd consul && terraform plan'
+            }
+        }
+        stage ("Terraform Apply"){
+            when { 
+                expression { env.CHOICE == 'apply' }
+            }
+            steps{
+                sh 'cd consul && terraform apply -auto-approve'
+            }
+        }
+        stage ("Terraform Destroy"){
+            when { 
+                expression { env.CHOICE == 'destroy' }
+            }
+            steps{
+                sh 'cd consul && terraform destroy -auto-approve'
+            }
+        }
+    }
+}
